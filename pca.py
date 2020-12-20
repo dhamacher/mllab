@@ -4,6 +4,10 @@ from pyspark.ml.feature import VectorAssembler, StandardScaler, PCA as PCAml
 import mlflow.spark
 import sys
 
+# https://stackoverflow.com/questions/22984335/recovering-features-names-of-explained-variance-ratio-in-pca-with-sklearn
+# https://medium.com/hackernoon/principal-component-analysis-unsupervised-learning-model-8f18c7683262
+
+
 # Source data path.
 train_set_uri = '.\\data\\USArrests.csv'
 

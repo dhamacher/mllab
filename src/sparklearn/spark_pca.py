@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.ml.pipeline import Pipeline
 from pyspark.ml.feature import VectorAssembler, StandardScaler, PCA as PCAml
+from pyspark.ml.linalg import Vectors
 import mlflow.spark
 import sys
 
@@ -39,24 +40,45 @@ scaler = StandardScaler(inputCol='features', outputCol='scaled_features', withSt
 # Build PCA Model
 pca = PCAml(k=pca_components, inputCol="scaled_features", outputCol="pca")
 
-try:
-    with mlflow.start_run():
-        ml_pipeline = Pipeline(stages=[assembler, scaler, pca])
-        model = ml_pipeline.fit(df)
-        # Make predictions
-        predictions = model.transform(df)
 
-        mlflow.log_param('pcas', float(pca_components))
 
-        # Shows the result.
-        exp_var_list = model.stages[-1].explainedVariance
-        i = 0
-        for var in exp_var_list:
-            mlflow.log_metric(f'pca_expl_var_{i}', float(var))
-            i = i + 1
+# try:
+#     with mlflow.start_run():
+#         ml_pipeline = Pipeline(stages=[assembler, scaler, pca])
+#         model = ml_pipeline.fit(df)
+#         # Make predictions
+#         predictions = model.transform(df)
+#
+#         mlflow.log_param('pcas', float(pca_components))
+#
+#         # Shows the result.
+#         exp_var_list = model.stages[-1].explainedVariance
+#         i = 0
+#         for var in exp_var_list:
+#             mlflow.log_metric(f'pca_expl_var_{i}', float(var))
+#             i = i + 1
+#
+#         mlflow.spark.log_model(model, "pca")
+# except Exception as e:
+#     print(str(e))
+#
+# print('Done')
+ml_pipeline = Pipeline(stages=[assembler, scaler, pca])
+model = ml_pipeline.fit(df)
+# Make predictions
+predictions = model.transform(df)
 
-        mlflow.spark.log_model(model, "pca")
-except Exception as e:
-    print(str(e))
 
-print('Done')
+v1 = Vectors.dense(predictions.select('features'))
+v2 = predictions.select('pca')
+
+# mlflow.log_param('pcas', float(pca_components))
+
+# Shows the result.
+exp_var_list = model.stages[-1].explainedVariance
+i = 0
+for var in exp_var_list:
+    mlflow.log_metric(f'pca_expl_var_{i}', float(var))
+    i = i + 1
+
+mlflow.spark.log_model(model, "pca")
